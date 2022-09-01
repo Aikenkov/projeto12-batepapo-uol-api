@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { MongoClient } from "mongodb";
 import Joi from "joi";
+import dayjs from "dayjs";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -24,19 +25,19 @@ const schema = Joi.object({
 
 app.post("/participants", async (req, res) => {
     const participant = req.body.name;
+    const now = dayjs().format("HH:mm:ss");
 
     const alreadyExists = await db
         .collection("participants")
-        .findOne({ name: participant.toString() });
+        .findOne({ name: participant });
 
-    console.log(alreadyExists);
     if (alreadyExists) {
         return res.status(409).send({ message: "Nome já existente" });
     }
 
     try {
         const value = await schema.validateAsync({
-            username: participant.toString(),
+            username: participant,
         });
     } catch (err) {
         return res.status(422).send({ message: "Nome irregular" });
@@ -46,6 +47,15 @@ app.post("/participants", async (req, res) => {
         const newParticipant = await db
             .collection("participants")
             .insertOne({ name: participant, lastStatus: Date.now() });
+
+        const loginMessage = await db.collection("messages").insertOne({
+            from: participant,
+            to: "Todos",
+            text: "entra na sala...",
+            type: "status",
+            time: now,
+        });
+
         return res.sendStatus(201);
     } catch (error) {
         return res.sendStatus(500);
