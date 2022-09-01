@@ -20,7 +20,7 @@ mongoClient.connect().then(() => {
 });
 
 const schema = Joi.object({
-    username: Joi.string().alphanum().min(3).max(30).required(),
+    username: Joi.string().min(3).max(30).required(),
 });
 
 app.post("/participants", async (req, res) => {
@@ -59,6 +59,19 @@ app.post("/participants", async (req, res) => {
         return res.sendStatus(201);
     } catch (error) {
         return res.sendStatus(500);
+    }
+});
+
+app.get("/participants", async (req, res) => {
+    try {
+        const participants = await db
+            .collection("participants")
+            .find()
+            .toArray();
+
+        res.send(participants);
+    } catch (error) {
+        res.sendStatus(500);
     }
 });
 
