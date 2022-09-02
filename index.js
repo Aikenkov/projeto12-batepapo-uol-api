@@ -128,4 +128,35 @@ app.post("/messages", async (req, res) => {
     }
 });
 
+app.get("/messages", async (req, res) => {
+    const { user } = req.headers;
+    const limit = parseInt(req.query.limit);
+    let messages;
+
+    const exist = await db.collection("participants").findOne({ name: user });
+    if (!exist) {
+        return res.sendStatus(422);
+    }
+
+    try {
+        messages = await db.collection("messages").find().toArray();
+    } catch (error) {
+        return res.sendStatus(500);
+    }
+
+    const filteredMessages = messages.filter(
+        (item) =>
+            item.to === user ||
+            item.from === user ||
+            item.type === "message" ||
+            item.type === "status"
+    );
+
+    if (limit > 0) {
+        filteredMessages.splice(0, filteredMessages.length - limit);
+    }
+
+    res.send(filteredMessages);
+});
+
 app.listen(5000, () => console.log("escutando na porta 5000"));
