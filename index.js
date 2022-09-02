@@ -26,7 +26,7 @@ const nameSchema = joi.object({
 const messageSchema = joi.object({
     to: joi.string().trim().min(1).required(),
     text: joi.string().trim().min(1).required(),
-    type: joi.string().equal("message").equal("private_message"),
+    type: joi.string().equal("message").equal("private_message").required(),
 });
 
 const now = dayjs().format("HH:mm:ss");
@@ -108,7 +108,24 @@ app.post("/messages", async (req, res) => {
         return res.status(422).send(erros);
     }
 
-    res.send(text);
+    const exist = await db.collection("participants").findOne({ name: user });
+    if (!exist) {
+        return res.sendStatus(422);
+    }
+
+    try {
+        const message = await db.collection("messages").insertOne({
+            from: user,
+            to,
+            text,
+            type,
+            time: now,
+        });
+        return res.send(message);
+        //return res.sendStatus(201);
+    } catch (error) {
+        return res.sendStatus(500);
+    }
 });
 
 app.listen(5000, () => console.log("escutando na porta 5000"));
