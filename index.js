@@ -177,4 +177,37 @@ app.post("/status", async (req, res) => {
     }
 });
 
+setInterval(logOut, 15000);
+
+async function logOut() {
+    let participants;
+    try {
+        participants = await db.collection("participants").find().toArray();
+    } catch (error) {
+        console.log(500);
+    }
+
+    let absent = await participants.filter(
+        (user) => user.lastStatus < Date.now() - 10000
+    );
+
+    absent.forEach((user) => {
+        try {
+            db.collection("participants").deleteOne({ name: user.name });
+            db.collection("messages").insertOne({
+                from: user.name,
+                to: "Todos",
+                text: "sai da sala...",
+                type: "status",
+                time: now,
+            });
+            console.log(user);
+        } catch (error) {
+            console.log(501);
+        }
+    });
+
+    console.log(200);
+}
+
 app.listen(5000, () => console.log("escutando na porta 5000"));
