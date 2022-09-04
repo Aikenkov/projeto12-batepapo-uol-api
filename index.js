@@ -11,7 +11,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-//console.log(process.env.BOLINHA, process.env.MONGO_URI);
 const mongoClient = new MongoClient(process.env.MONGO_URI);
 
 let db;
@@ -201,13 +200,10 @@ async function logOut() {
                 type: "status",
                 time: now,
             });
-            console.log(user);
         } catch (error) {
             console.log(501);
         }
     });
-
-    console.log(200);
 }
 
 app.listen(5000, () => console.log("escutando na porta 5000"));
